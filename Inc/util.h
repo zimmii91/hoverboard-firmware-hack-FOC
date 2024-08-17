@@ -33,12 +33,14 @@
       uint8_t  channels[IBUS_NUM_CHANNELS*2];
       uint8_t  checksuml;
       uint8_t  checksumh;
+      int8_t   buzzer;
     } SerialCommand;
   #else
     typedef struct{
       uint16_t  start;
       int16_t   steer;
       int16_t   speed;
+      int8_t    buzzer;
       uint16_t  checksum;
     } SerialCommand;
   #endif
@@ -54,7 +56,7 @@
       uint16_t  checksum;
     } SerialSideboard;
 #endif
-
+extern int commandBuzzer; 
 // Input Structure
 typedef struct {
   int16_t   raw;    // raw input

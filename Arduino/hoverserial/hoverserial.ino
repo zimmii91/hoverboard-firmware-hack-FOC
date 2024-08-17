@@ -34,7 +34,7 @@
 // #define DEBUG_RX                        // [-] Debug received data. Prints all bytes to serial (comment-out to disable)
 
 #include <SoftwareSerial.h>
-SoftwareSerial HoverSerial(2,3);        // RX, TX
+SoftwareSerial HoverSerial(27,26);        // RX, TX
 
 // Global variables
 uint8_t idx = 0;                        // Index for new data pointer
@@ -57,7 +57,9 @@ typedef struct{
    int16_t  cmd2;
    int16_t  speedR_meas;
    int16_t  speedL_meas;
+   int16_t  batAdc;
    int16_t  batVoltage;
+   int16_t  tempAdc;
    int16_t  boardTemp;
    uint16_t cmdLed;
    uint16_t checksum;
@@ -72,7 +74,7 @@ void setup()
   Serial.println("Hoverboard Serial v1.0");
 
   HoverSerial.begin(HOVER_SERIAL_BAUD);
-  pinMode(LED_BUILTIN, OUTPUT);
+  pinMode(2, OUTPUT);
 }
 
 // ########################## SEND ##########################
@@ -121,7 +123,7 @@ void Receive()
     if (idx == sizeof(SerialFeedback)) {
         uint16_t checksum;
         checksum = (uint16_t)(NewFeedback.start ^ NewFeedback.cmd1 ^ NewFeedback.cmd2 ^ NewFeedback.speedR_meas ^ NewFeedback.speedL_meas
-                            ^ NewFeedback.batVoltage ^ NewFeedback.boardTemp ^ NewFeedback.cmdLed);
+                            ^ NewFeedback.batAdc ^ NewFeedback.batVoltage ^ NewFeedback.tempAdc ^ NewFeedback.boardTemp ^ NewFeedback.cmdLed);
 
         // Check validity of the new data
         if (NewFeedback.start == START_FRAME && checksum == NewFeedback.checksum) {
@@ -133,9 +135,11 @@ void Receive()
             Serial.print(" 2: ");  Serial.print(Feedback.cmd2);
             Serial.print(" 3: ");  Serial.print(Feedback.speedR_meas);
             Serial.print(" 4: ");  Serial.print(Feedback.speedL_meas);
-            Serial.print(" 5: ");  Serial.print(Feedback.batVoltage);
-            Serial.print(" 6: ");  Serial.print(Feedback.boardTemp);
-            Serial.print(" 7: ");  Serial.println(Feedback.cmdLed);
+            Serial.print(" 5: ");  Serial.print(Feedback.batAdc);
+            Serial.print(" 6: ");  Serial.print(Feedback.batVoltage);
+            Serial.print(" 7: ");  Serial.print(Feedback.tempAdc);
+            Serial.print(" 8: ");  Serial.print(Feedback.boardTemp);
+            Serial.print(" 9: ");  Serial.println(Feedback.cmdLed);
         } else {
           Serial.println("Non-valid data skipped");
         }
@@ -172,7 +176,7 @@ void loop(void)
     iStep = -iStep;
 
   // Blink the LED
-  digitalWrite(LED_BUILTIN, (timeNow%2000)<1000);
+  digitalWrite(2, (timeNow%2000)<1000);
 }
 
 // ########################## END ##########################

@@ -84,6 +84,8 @@ extern uint8_t enable;                  // global variable for motor enable
 
 extern int16_t batVoltage;              // global variable for battery voltage
 
+extern SerialCommand *command_in;
+
 #if defined(SIDEBOARD_SERIAL_USART2)
 extern SerialSideboard Sideboard_L;
 #endif
@@ -570,10 +572,14 @@ int main(void) {
     } else if (BEEPS_BACKWARD && (((cmdR < -50 || cmdL < -50) && speedAvg < 0) || MultipleTapBrake.b_multipleTap)) { // 1 beep fast (high pitch): Backward spinning motors
       beepCount(0, 5, 1);
       backwardDrive = 1;
+    } else if (commandBuzzer == 1) {
+      beepCount(0, 5, 1); 
     } else {  // do not beep
       beepCount(0, 0, 0);
       backwardDrive = 0;
     }
+
+
 
 
     inactivity_timeout_counter++;
