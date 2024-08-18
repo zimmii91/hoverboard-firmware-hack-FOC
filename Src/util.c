@@ -897,7 +897,7 @@ void standstillHold(void) {
   #if defined(STANDSTILL_HOLD_ENABLE) && (CTRL_TYP_SEL == FOC_CTRL) && (CTRL_MOD_REQ != SPD_MODE)
     if (!rtP_Left.b_cruiseCtrlEna) {                                  // If Stanstill in NOT Active -> try Activation
       if (((input1[inIdx].cmd > 50 || input2[inIdx].cmd < -50) && speedAvgAbs < 30) // Check if Brake is pressed AND measured speed is small
-          || (input2[inIdx].cmd < 20 && speedAvgAbs < 5)) {           // OR Throttle is small AND measured speed is very small
+          || (input2[inIdx].cmd < 20 && speedAvgAbs < 5 && commandParked ==1)) {           // OR Throttle is small AND measured speed is very small
         rtP_Left.n_cruiseMotTgt   = 0;
         rtP_Right.n_cruiseMotTgt  = 0;
         rtP_Left.b_cruiseCtrlEna  = 1;
@@ -906,7 +906,7 @@ void standstillHold(void) {
       } 
     }
     else {                                                            // If Stanstill is Active -> try Deactivation
-      if (input1[inIdx].cmd < 20 && input2[inIdx].cmd > 50 && !cruiseCtrlAcv) { // Check if Brake is released AND Throttle is pressed AND no Cruise Control
+      if (input1[inIdx].cmd < 20  && (input2[inIdx].cmd > 50 || input2[inIdx].cmd < -50) && !cruiseCtrlAcv || commandParked == 0) { // Check if Brake is released AND Throttle is pressed AND no Cruise Control
         rtP_Left.b_cruiseCtrlEna  = 0;
         rtP_Right.b_cruiseCtrlEna = 0;
         standstillAcv = 0;

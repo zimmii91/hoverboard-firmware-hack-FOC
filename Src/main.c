@@ -276,7 +276,7 @@ int main(void) {
       #endif
 
       #ifdef STANDSTILL_HOLD_ENABLE
-        standstillHold();                                           // Apply Standstill Hold functionality. Only available and makes sense for VOLTAGE or TORQUE Mode
+           standstillHold();                                           // Apply Standstill Hold functionality. Only available and makes sense for VOLTAGE or TORQUE Mode 
       #endif
 
       #ifdef VARIANT_HOVERCAR
