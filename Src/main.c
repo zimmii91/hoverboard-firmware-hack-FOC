@@ -573,7 +573,10 @@ int main(void) {
       beepCount(0, 5, 1);
       backwardDrive = 1;
     } else if (commandBuzzer == 1) {
-      beepCount(0, 5, 1); 
+      //beepCustom1();
+      //beepTwinkle();
+      //testFrequencies(); 
+      beepCount(0, 11, 0);
     } else {  // do not beep
       beepCount(0, 0, 0);
       backwardDrive = 0;

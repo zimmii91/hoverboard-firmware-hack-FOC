@@ -34,6 +34,7 @@
       uint8_t  checksuml;
       uint8_t  checksumh;
       int8_t   buzzer;
+      int8_t   parked;
     } SerialCommand;
   #else
     typedef struct{
@@ -41,6 +42,7 @@
       int16_t   steer;
       int16_t   speed;
       int8_t    buzzer;
+      int8_t    parked;
       uint16_t  checksum;
     } SerialCommand;
   #endif
@@ -57,6 +59,7 @@
     } SerialSideboard;
 #endif
 extern int commandBuzzer; 
+extern int commandParked; 
 // Input Structure
 typedef struct {
   int16_t   raw;    // raw input
@@ -81,6 +84,9 @@ void beepCount(uint8_t cnt, uint8_t freq, uint8_t pattern);
 void beepLong(uint8_t freq);
 void beepShort(uint8_t freq);
 void beepShortMany(uint8_t cnt, int8_t dir);
+void beepCustom1(void);
+void beepTwinkle(void);
+void testFrequencies(void);
 void calcAvgSpeed(void);
 void adcCalibLim(void);
 void updateCurSpdLim(void);

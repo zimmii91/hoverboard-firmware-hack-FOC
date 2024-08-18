@@ -37,6 +37,7 @@
 
 /* =========================== Variable Definitions =========================== */
 int commandBuzzer = 0; 
+int commandParked = 0; 
 //------------------------------------------------------------------------
 // Global variables set externally
 //------------------------------------------------------------------------
@@ -457,6 +458,230 @@ void beepShortMany(uint8_t cnt, int8_t dir) {
     }
 }
 
+/* =========================== Annoying tones =========================== */
+typedef enum {
+    BEEP_IDLE,
+    BEEP_WAVE_UP,
+    BEEP_WAVE_DOWN,
+    BEEP_BEEP_ON,
+    BEEP_BEEP_OFF,
+    BEEP_DONE
+} BeepState;
+
+BeepState beepState = BEEP_IDLE;
+uint32_t lastBeepTime = 0;
+uint8_t waveIndex = 2;
+uint8_t beepCountLocal = 0;  // Local variable to track beep counts within the function
+
+void beepCustom1(void) {
+    uint32_t currentTime = HAL_GetTick(); // Get the current time in ms
+
+    switch(beepState) {
+        case BEEP_IDLE:
+            waveIndex = 2;
+            beepState = BEEP_WAVE_UP;
+            lastBeepTime = currentTime;
+            break;
+
+        case BEEP_WAVE_UP:
+            if (currentTime - lastBeepTime >= 100) { // 100 ms delay between tones
+                buzzerFreq = waveIndex;
+                if (waveIndex < 10) {
+                    waveIndex += 2;
+                } else {
+                    beepState = BEEP_WAVE_DOWN;
+                }
+                lastBeepTime = currentTime;
+            }
+            break;
+
+        case BEEP_WAVE_DOWN:
+            if (currentTime - lastBeepTime >= 100) {
+                buzzerFreq = waveIndex;
+                if (waveIndex > 2) {
+                    waveIndex -= 2;
+                } else {
+                    beepState = BEEP_BEEP_ON;
+                    beepCountLocal = 0;
+                }
+                lastBeepTime = currentTime;
+            }
+            break;
+
+        case BEEP_BEEP_ON:
+            if (currentTime - lastBeepTime >= 50) { // 50 ms beep
+                buzzerFreq = 8;
+                beepState = BEEP_BEEP_OFF;
+                lastBeepTime = currentTime;
+            }
+            break;
+
+        case BEEP_BEEP_OFF:
+            if (currentTime - lastBeepTime >= 50) { // 50 ms silence
+                buzzerFreq = 0;
+                if (++beepCountLocal < 3) {
+                    beepState = BEEP_BEEP_ON;
+                } else {
+                    beepState = BEEP_DONE;
+                }
+                lastBeepTime = currentTime;
+            }
+            break;
+
+        case BEEP_DONE:
+            buzzerFreq = 0; // Ensure buzzer is off
+            beepState = BEEP_IDLE; // Reset for next time
+            break;
+    }
+}
+
+
+typedef enum {
+    MELODY_IDLE,
+    MELODY_PLAY_NOTE,
+    MELODY_PAUSE,
+    MELODY_DONE
+} MelodyState;
+
+MelodyState melodyState = MELODY_IDLE;
+uint32_t lastMelodyTime = 0;
+uint8_t noteIndex = 0;
+
+typedef struct {
+    uint16_t frequency;
+    uint16_t duration;
+} Note;
+
+#define C4  15  // Adjusted value
+#define D4  16
+#define E4  18
+#define F4  20
+#define G4  22
+#define A4  23
+#define B4  26
+#define C5  29
+
+
+Note twinkleMelody[] = {
+    {C4, 500}, {C4, 500}, {G4, 500}, {G4, 500},
+    {A4, 500}, {A4, 500}, {G4, 1000},
+    {F4, 500}, {F4, 500}, {E4, 500}, {E4, 500},
+    {D4, 500}, {D4, 500}, {C4, 1000},
+    {G4, 500}, {G4, 500}, {F4, 500}, {F4, 500},
+    {E4, 500}, {E4, 500}, {D4, 1000},
+    {G4, 500}, {G4, 500}, {F4, 500}, {F4, 500},
+    {E4, 500}, {E4, 500}, {D4, 1000},
+    {C4, 500}, {C4, 500}, {G4, 500}, {G4, 500},
+    {A4, 500}, {A4, 500}, {G4, 1000},
+    {F4, 500}, {F4, 500}, {E4, 500}, {E4, 500},
+    {D4, 500}, {D4, 500}, {C4, 1000}
+};
+uint8_t totalNotes = sizeof(twinkleMelody) / sizeof(Note);
+
+void beepTwinkle(void) {
+
+    uint32_t currentTime = HAL_GetTick(); // Get the current time in ms
+
+    switch (melodyState) {
+        case MELODY_IDLE:
+            noteIndex = 0;
+            melodyState = MELODY_PLAY_NOTE;
+            lastMelodyTime = currentTime;
+            break;
+
+        case MELODY_PLAY_NOTE:
+            if (noteIndex < totalNotes) {
+                if (currentTime - lastMelodyTime >= twinkleMelody[noteIndex].duration) {
+                    buzzerFreq = twinkleMelody[noteIndex].frequency;  // Set the frequency of the note
+                    melodyState = MELODY_PAUSE;
+                    lastMelodyTime = currentTime;
+                }
+            } else {
+                melodyState = MELODY_DONE;
+            }
+            break;
+
+        case MELODY_PAUSE:
+            if (currentTime - lastMelodyTime >= 50) {  // Pause for 50 ms between notes
+                buzzerFreq = 0;  // Turn off the buzzer
+                noteIndex++;     // Move to the next note
+                melodyState = MELODY_PLAY_NOTE;
+                lastMelodyTime = currentTime;
+            }
+            break;
+
+        case MELODY_DONE:
+            buzzerFreq = 0;  // Ensure the buzzer is off
+            melodyState = MELODY_IDLE;  // Reset for next time
+            break;
+    }
+}
+
+
+
+
+typedef enum {
+    TEST_IDLE,
+    TEST_PLAY_NOTE,
+    TEST_PAUSE,
+    TEST_DONE
+} TestState;
+
+TestState testState = TEST_IDLE;
+uint32_t lastTestTime = 0;
+
+typedef struct {
+    uint16_t frequency;  // Frequency value for the note
+    uint16_t duration;   // Duration in milliseconds
+} TestNote;
+
+// Test sequence with placeholder frequencies
+TestNote testSequence[] = {
+    {C4, 500}, {D4, 500}, {E4, 500}, {F4, 500},
+    {G4, 500}, {A4, 500}, {B4, 500}, {C5, 500}
+};
+uint8_t totalTestNotes = sizeof(testSequence) / sizeof(TestNote);
+
+void testFrequencies(void) {
+    uint32_t currentTime = HAL_GetTick(); // Get the current time in ms
+
+    switch (testState) {
+        case TEST_IDLE:
+            noteIndex = 0;
+            testState = TEST_PLAY_NOTE;
+            lastTestTime = currentTime;
+            break;
+
+        case TEST_PLAY_NOTE:
+            if (noteIndex < totalTestNotes) {
+                if (currentTime - lastTestTime >= testSequence[noteIndex].duration) {
+                    buzzerFreq = testSequence[noteIndex].frequency;  // Set frequency
+                    testState = TEST_PAUSE;
+                    lastTestTime = currentTime;
+                }
+            } else {
+                testState = TEST_DONE;
+            }
+            break;
+
+        case TEST_PAUSE:
+            if (currentTime - lastTestTime >= 50) {  // Pause between notes
+                buzzerFreq = 0;  // Turn off the buzzer
+                noteIndex++;     // Move to the next note
+                testState = TEST_PLAY_NOTE;
+                lastTestTime = currentTime;
+            }
+            break;
+
+        case TEST_DONE:
+            buzzerFreq = 0;  // Ensure the buzzer is off
+            testState = TEST_IDLE;  // Reset for next time
+            break;
+    }
+}
+
+
+/* =========================== End of Annoying tones =========================== */
 void calcAvgSpeed(void) {
     // Calculate measured average speed. The minus sign (-) is because motors spin in opposite directions
     speedAvg = 0;
@@ -1273,10 +1498,11 @@ void usart_process_command(SerialCommand *command_in, SerialCommand *command_out
   #else
   uint16_t checksum;
   if (command_in->start == SERIAL_START_FRAME) {
-    checksum = (uint16_t)(command_in->start ^ command_in->steer ^ command_in->speed ^ command_in->buzzer);
+    checksum = (uint16_t)(command_in->start ^ command_in->steer ^ command_in->speed ^ command_in->buzzer ^command_in->parked);
     if (command_in->checksum == checksum) {
       *command_out = *command_in;
       commandBuzzer = command_in->buzzer;
+      commandParked = command_in->parked;
     
 
       if (usart_idx == 2) {             // Sideboard USART2
