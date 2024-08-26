@@ -314,6 +314,7 @@
 #define FLASH_WRITE_KEY 0x1002 // Flash memory writing key. Change this key to ignore the input calibrations from the flash memory and use the ones in config.h
 #endif
 
+//#define USART_BRAKE_ENABLE            // Use Uart speed commmannd to act as brake, when forward & commandBrake = 1 (-speed = brake) When backwards commandBrake = 0, positive speed = brake (+speed=brake) 
 // #define TANK_STEERING              // use for tank steering, each input controls each wheel
 // #define SUPPORT_BUTTONS_LEFT       // use left sensor board cable for button inputs.  Disable DEBUG_SERIAL_USART2!
 // #define SUPPORT_BUTTONS_RIGHT      // use right sensor board cable for button inputs. Disable DEBUG_SERIAL_USART3!
