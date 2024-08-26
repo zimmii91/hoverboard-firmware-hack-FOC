@@ -38,6 +38,7 @@
 /* =========================== Variable Definitions =========================== */
 int commandBuzzer = 0; 
 int commandParked = 0; 
+int commandBrake = 0;
 //------------------------------------------------------------------------
 // Global variables set externally
 //------------------------------------------------------------------------
@@ -905,8 +906,8 @@ void standstillHold(void) {
         standstillAcv = 1;
       } 
     }
-    else {                                                            // If Stanstill is Active -> try Deactivation
-      if (input1[inIdx].cmd < 20  && (input2[inIdx].cmd > 50 || input2[inIdx].cmd < -50) && !cruiseCtrlAcv || commandParked == 0) { // Check if Brake is released AND Throttle is pressed AND no Cruise Control
+    else {                             // If Stanstill is Active -> try Deactivation
+      if (input1[inIdx].cmd < 20  && (input2[inIdx].cmd > 50 || input2[inIdx].cmd < -50) && !cruiseCtrlAcv || commandParked == 0) { // Check if Brake is released AND Throttle is pressed AND no Cruise Control. commandParked will override.
         rtP_Left.b_cruiseCtrlEna  = 0;
         rtP_Right.b_cruiseCtrlEna = 0;
         standstillAcv = 0;
@@ -1498,11 +1499,12 @@ void usart_process_command(SerialCommand *command_in, SerialCommand *command_out
   #else
   uint16_t checksum;
   if (command_in->start == SERIAL_START_FRAME) {
-    checksum = (uint16_t)(command_in->start ^ command_in->steer ^ command_in->speed ^ command_in->buzzer ^command_in->parked);
+    checksum = (uint16_t)(command_in->start ^ command_in->steer ^ command_in->speed ^ command_in->buzzer ^command_in->parked ^ command_in->brake);	
     if (command_in->checksum == checksum) {
       *command_out = *command_in;
       commandBuzzer = command_in->buzzer;
       commandParked = command_in->parked;
+      commandBrake  = command_in->brake;
     
 
       if (usart_idx == 2) {             // Sideboard USART2

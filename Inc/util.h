@@ -35,6 +35,7 @@
       uint8_t  checksumh;
       int8_t   buzzer;
       int8_t   parked;
+      int8_t   brake;
     } SerialCommand;
   #else
     typedef struct{
@@ -43,6 +44,7 @@
       int16_t   speed;
       int8_t    buzzer;
       int8_t    parked;
+      int8_t    brake;
       uint16_t  checksum;
     } SerialCommand;
   #endif
@@ -60,6 +62,7 @@
 #endif
 extern int commandBuzzer; 
 extern int commandParked; 
+extern int commandBrake;
 // Input Structure
 typedef struct {
   int16_t   raw;    // raw input

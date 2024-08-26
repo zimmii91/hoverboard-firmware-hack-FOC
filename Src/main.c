@@ -296,7 +296,7 @@ int main(void) {
         electricBrake(speedBlend, MultipleTapBrake.b_multipleTap);  // Apply Electric Brake. Only available and makes sense for TORQUE Mode
       #endif
 
-      #ifdef VARIANT_HOVERCAR
+      #ifdef VARIANT_HOVERCAR 
       if (inIdx == CONTROL_ADC) {                                   // Only use use implementation below if pedals are in use (ADC input)
         if (speedAvg > 0) {                                         // Make sure the Brake pedal is opposite to the direction of motion AND it goes to 0 as we reach standstill (to avoid Reverse driving by Brake pedal) 
           input1[inIdx].cmd = (int16_t)((-input1[inIdx].cmd * speedBlend) >> 15);
@@ -306,9 +306,19 @@ int main(void) {
       }
       #endif
 
-      #ifdef VARIANT_SKATEBOARD
+      #ifdef (VARIANT_SKATEBOARD) || defined (USART_BRAKE_ENABLE) && (commandBrake == 1)
         if (input2[inIdx].cmd < 0) {                                // When Throttle is negative, it acts as brake. This condition is to make sure it goes to 0 as we reach standstill (to avoid Reverse driving) 
           if (speedAvg > 0) {                                       // Make sure the braking is opposite to the direction of motion
+            input2[inIdx].cmd  = (int16_t)(( input2[inIdx].cmd * speedBlend) >> 15);
+          } else {
+            input2[inIdx].cmd  = (int16_t)((-input2[inIdx].cmd * speedBlend) >> 15);
+          }
+        }
+      #endif
+
+      #ifdef (VARIANT_SKATEBOARD) || defined (USART_BRAKE_ENABLE) && (commandBrake == 0)
+        if (input2[inIdx].cmd > 0) {                                // When Throttle is positive, it acts as brake when moving in reverse
+          if (speedAvg < 0) {                                       // Make sure the braking is opposite to the direction of motion
             input2[inIdx].cmd  = (int16_t)(( input2[inIdx].cmd * speedBlend) >> 15);
           } else {
             input2[inIdx].cmd  = (int16_t)((-input2[inIdx].cmd * speedBlend) >> 15);
