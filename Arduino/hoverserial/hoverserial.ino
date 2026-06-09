@@ -47,6 +47,8 @@ typedef struct{
    uint16_t start;
    int16_t  steer;
    int16_t  speed;
+  int8_t   buzzer;
+  uint8_t  reserved;   // Keep wire format aligned with STM32 struct padding
    uint16_t checksum;
 } SerialCommand;
 SerialCommand Command;
@@ -57,9 +59,7 @@ typedef struct{
    int16_t  cmd2;
    int16_t  speedR_meas;
    int16_t  speedL_meas;
-   int16_t  batAdc;
    int16_t  batVoltage;
-   int16_t  tempAdc;
    int16_t  boardTemp;
    uint16_t cmdLed;
    uint16_t checksum;
@@ -72,19 +72,25 @@ void setup()
 {
   Serial.begin(SERIAL_BAUD);
   Serial.println("Hoverboard Serial v1.0");
+  Serial.print("TX command bytes: ");
+  Serial.println(sizeof(SerialCommand));
+  Serial.print("RX feedback bytes: ");
+  Serial.println(sizeof(SerialFeedback));
 
   HoverSerial.begin(HOVER_SERIAL_BAUD);
   pinMode(2, OUTPUT);
 }
 
 // ########################## SEND ##########################
-void Send(int16_t uSteer, int16_t uSpeed)
+void Send(int16_t uSteer, int16_t uSpeed, int8_t uBuzzer)
 {
   // Create command
   Command.start    = (uint16_t)START_FRAME;
   Command.steer    = (int16_t)uSteer;
   Command.speed    = (int16_t)uSpeed;
-  Command.checksum = (uint16_t)(Command.start ^ Command.steer ^ Command.speed);
+  Command.buzzer   = (int8_t)uBuzzer;
+  Command.reserved = 0;
+  Command.checksum = (uint16_t)(Command.start ^ Command.steer ^ Command.speed ^ Command.buzzer);
 
   // Write to Serial
   HoverSerial.write((uint8_t *) &Command, sizeof(Command)); 
@@ -123,7 +129,7 @@ void Receive()
     if (idx == sizeof(SerialFeedback)) {
         uint16_t checksum;
         checksum = (uint16_t)(NewFeedback.start ^ NewFeedback.cmd1 ^ NewFeedback.cmd2 ^ NewFeedback.speedR_meas ^ NewFeedback.speedL_meas
-                            ^ NewFeedback.batAdc ^ NewFeedback.batVoltage ^ NewFeedback.tempAdc ^ NewFeedback.boardTemp ^ NewFeedback.cmdLed);
+                ^ NewFeedback.batVoltage ^ NewFeedback.boardTemp ^ NewFeedback.cmdLed);
 
         // Check validity of the new data
         if (NewFeedback.start == START_FRAME && checksum == NewFeedback.checksum) {
@@ -135,11 +141,9 @@ void Receive()
             Serial.print(" 2: ");  Serial.print(Feedback.cmd2);
             Serial.print(" 3: ");  Serial.print(Feedback.speedR_meas);
             Serial.print(" 4: ");  Serial.print(Feedback.speedL_meas);
-            Serial.print(" 5: ");  Serial.print(Feedback.batAdc);
-            Serial.print(" 6: ");  Serial.print(Feedback.batVoltage);
-            Serial.print(" 7: ");  Serial.print(Feedback.tempAdc);
-            Serial.print(" 8: ");  Serial.print(Feedback.boardTemp);
-            Serial.print(" 9: ");  Serial.println(Feedback.cmdLed);
+            Serial.print(" 5: ");  Serial.print(Feedback.batVoltage);
+            Serial.print(" 6: ");  Serial.print(Feedback.boardTemp);
+            Serial.print(" 7: ");  Serial.println(Feedback.cmdLed);
         } else {
           Serial.println("Non-valid data skipped");
         }
@@ -166,7 +170,7 @@ void loop(void)
   // Send commands
   if (iTimeSend > timeNow) return;
   iTimeSend = timeNow + TIME_SEND;
-  Send(0, iTest);
+  Send(0, iTest, 0);
 
   // Calculate test command signal
   iTest += iStep;
